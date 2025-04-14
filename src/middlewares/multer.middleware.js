@@ -10,5 +10,5 @@ const storage = multer.diskStorage({
   })
   
 export const upload = multer({ 
-    storage: storage   // or   =>   storage.       coz both are same
+    storage: storage   // or   =>   storage,       coz both are same
 })
