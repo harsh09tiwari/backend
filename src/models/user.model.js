@@ -2,6 +2,8 @@ import mongoose, {Schema} from "mongoose";
 import jwt from "jsonwebtoken"     //   jwt is a bearer token(it is like key, we send data who have the key  )
 import bcrypt from "bcrypt"
 
+
+
 const userSchema = new Schema(
     {
         username : {
@@ -49,6 +51,9 @@ const userSchema = new Schema(
     {timestamps : true}
 )
 
+
+
+
 //    using bcrypt
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next()  //  password nai change kiya to bahar aajao
@@ -60,6 +65,8 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.isPasswordCorrect = async function name(password) {
     return await bcrypt.compare(password, this.password)
 }
+
+
 
 //  using jwt
 userSchema.methods.generateAccessToken = function (){

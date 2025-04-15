@@ -1,5 +1,5 @@
 import { Router } from "express";
-import registerUser from "../controllers/user.controller.js";
+import {registerUser, loginUser} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 
@@ -19,4 +19,10 @@ router.route("/register").post(
     registerUser
 )
 
-export default router;
+router.route("/login").post(loginUser)
+
+
+// secure  route
+router.route("/logout").post(verifyJWT, logoutUser)    //    verifyJWT is the middleware and we can just add it like that but use next() for that
+
+export default router; 
