@@ -3,7 +3,7 @@ import { ApiError } from "../utils/apiError.js";     //   for validation of user
 import {User} from "../models/user.model.js"  //  for checking user details from datebase
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import jwt from "jasonwebtoken"
+import jwt from "jsonwebtoken"
 import { decode } from "jsonwebtoken";
 
 
