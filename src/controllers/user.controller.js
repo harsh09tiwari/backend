@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import { decode } from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 
@@ -446,6 +447,53 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
      
 })
 
+const getWatchHistory = asyncHandler(async(req, res) => {
+    //    req.User._id    =>   it will give ID in STRING format and moongoose will convert it in object id behind the scene
+    const user = await User.aggregate([
+        {
+            $match : {  //   in Aggregation pipeline moongoose don't work, therefore we have to create object id
+                _id : new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup : {
+                from : "videos",    //   since the Video is converted into "videos"  due to saving in db
+                localField : "watchHistory",
+                foreignField : "_id",
+                as : "watchHistory",
+                pipeline : [
+                    {
+                        $lookup : {
+                            from : "users",
+                            localField : "owner",
+                            foreignField : "_id",
+                            as : "owner",
+                            pipeline : [
+                                {
+                                    $project : {
+                                        fullname : 1,
+                                        username : 1,
+                                        avatar : 1,
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ] 
+            },
+            $addFields : {
+                owner : {
+                    $first : "owner"
+                }
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user[0].watchHistory, "Watch History fetched successfully"))
+})
+
 export {
     registerUser,
     loginUser,
@@ -456,5 +504,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
