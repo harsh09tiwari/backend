@@ -313,7 +313,8 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
 
 })
 
-  
+  //    FOR MYSELF =>   DELETE THE PREVIOUS AVATAR
+
 //  updating files which required middlewares   =>    Avatar
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path
@@ -372,6 +373,79 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, user, "Cover Image updated successfully"))
 })
 
+
+//     we are fetching the number of subscriber of a channel and no of channel he subscribed
+const getUserChannelProfile = asyncHandler(async(req, res) => {
+    const {username} = req.params    //   url se username milega, params se url milega
+    if(!username?.trim()){
+        throw new ApiError(400, "Username is missing");   
+    }
+
+//      USING AGGREGATION PIPELINE OF MONGO
+    const channel = await User.aggregate([
+        {
+            $match : {
+                username : username?.toLowerCase
+            }
+        },
+        {   //    checking for no of subscriber
+            $lookup : {
+                from  : "subscriptions",   //  model se dheko
+                localField : "_id",
+                foreignField : "channel",
+                as : "subscribers"
+            }
+        },
+        {   //    checking for no of channels
+            $lookup : {
+                from  : "subscriptions",   //  model se dheko
+                localField : "_id",
+                foreignField : "subscriber",
+                as : "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount : {
+                    $size : "$subscribers"
+                },
+                channelSubscribedToCount: {
+                    $size : "$subscribedTo"
+                },
+                isSubscribed : {
+                    $cond : {
+                        if: {$in:[req.user?._id, "$subscribers.subscribe"]},   //   here $ represents the fields => line no 410
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {    //   this only allows selected to project=> means display
+            $project : {
+                fullname : 1,
+                username : 1,
+                subscribersCount : 1,
+                channelSubscribedToCount : 1,
+                isSubscribed : 1,
+                avatar : 1,
+                coverImage : 1,
+                email : 1
+            }
+        }
+    ])
+
+    if (!channel?.length) {
+        throw new ApiError(404, "channel doeas not exists");
+        
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, channel[0], "user channel fetched successfully"))
+     
+})
+
 export {
     registerUser,
     loginUser,
@@ -381,5 +455,6 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
 };
